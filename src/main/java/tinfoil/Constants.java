@@ -1,0 +1,36 @@
+package tinfoil;
+
+import com.sun.istack.internal.FinalArrayList;
+import com.sun.tools.internal.xjc.reader.xmlschema.bindinfo.BIConversion;
+
+import javax.activation.MimetypesFileTypeMap;
+
+/**
+ * <b>Constants</b>
+ *
+ * @author ebridges@tinfoil.biz
+ */
+
+public class Constants {
+    public static final MimetypesFileTypeMap MIMETYPE_MAP = new MimetypesFileTypeMap();
+
+    public static final String APPLICATION_VENDOR = "tinfoil";
+    public static final String APPLICATION_NAME = "picasa-uploader";
+    public static final String APPLICATION_VERSION = "0.2";
+    public static final String APPLICATION_AGENT = String.format("%s/%s/v.%s",APPLICATION_VENDOR,APPLICATION_NAME,APPLICATION_VERSION);
+
+    public static final String PHOTO_DIRECTORY = "/Users/ebridges/Pictures/picasa-upload";
+    public static final String DEFAULT_ACCESS = "private";
+
+
+    public static final String DIGIKAM_DATABASE_DRIVER = "org.sqlite.JDBC.class";
+    public static final String DIGIKAM_DATABASE_URL = "jdbc:sqlite:/"+PHOTO_DIRECTORY+"/digikam.db";
+
+    public static final String PICASA_PROFILE_URL = "https://profiles.google.com";
+    public static final String PICASA_DATA_API_URL = "https://picasaweb.google.com/data/feed/api/user";
+    // first param is userId, second is the album name
+    public static final String PICASA_ALBUM_URL = "https://picasaweb.google.com/%s/%s";
+
+    private Constants() {
+    }
+}
