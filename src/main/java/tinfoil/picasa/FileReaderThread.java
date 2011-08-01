@@ -1,8 +1,14 @@
+/*
+ * Copyright (c) 2011. Edward Q. Bridges <ebridges@gmail.com>
+ * Licensed under the GNU Lesser General Public License v.3.0
+ * http://www.gnu.org/licenses/lgpl.html
+ */
+
 package tinfoil.picasa;
 
 import static java.lang.String.format;
 import static tinfoil.Util.getTypeFromPicture;
-import static tinfoil.Util.lookupCreateDate;
+import static tinfoil.Util.lookupCreateDateOrModifiedDate;
 
 import java.io.File;
 import java.io.IOException;
@@ -32,38 +38,41 @@ import tinfoil.Constants;
  * Date: 7/30/11
  * Time: 3:47 PM
  */
-public class FileReaderThread implements Callable<PhotoUploadResult> {
+public class FileReaderThread implements Callable<String> {
     private final Logger logger = Logger.getLogger(FileReaderThread.class);
 
     private final Album album;
     private final File photo;
+    private final PhotoUploadResult result;
     private final PicasawebService service;
 
-    public FileReaderThread(Album album, final File photo, final UploadConfiguration configuration) throws AuthenticationException {
+    public FileReaderThread(Album album, final File photo, final UploadConfiguration configuration, PhotoUploadResult result) throws AuthenticationException {
         this.album = album;
         this.photo = photo;
+        this.result = result;
         this.service = (new PhotoService()).init(configuration.getCredentials());
     }
 
     @Override
-    public PhotoUploadResult call() throws Exception {
+    public String call() throws Exception {
         logger.info(format("adding photo [%s] to folder [%s]", photo.getName(), album.getAlbumInfo().getAlbumName()));
-        PhotoUploadResult result;
-
         try {
             PhotoEntry photoEntry = initalizePhotoEntry();
             if(null != photoEntry) {
                 addTagsToPhoto(photoEntry);
+                result.setSuccess();
+            } else {
+                result.setPartiallyProcessed();
             }
-            result = new PhotoUploadResult(album, photo, "SUCCESS");
         } catch (Exception e) {
-            result = new PhotoUploadResult(album, photo, e.getMessage(), e);
+            result.setError(e);
             throw e;
         } catch (Throwable t) {
-            result = new PhotoUploadResult(album, photo, t.getMessage(), t);
+            result.setError(t);
+            throw new RuntimeException(t);
         }
 
-        return result;
+        return format("%s/%s",album.getAlbumInfo().getFolder().getName(), photo.getName());
     }
 
     private PhotoEntry initalizePhotoEntry() throws IOException, InterruptedException {
@@ -82,7 +91,7 @@ public class FileReaderThread implements Callable<PhotoUploadResult> {
         // @todo implementation leakage
         pe.setKeywords(album.getAlbumEntry().getMediaKeywords());
 
-        Date creationDate = lookupCreateDate(photo);
+        Date creationDate = lookupCreateDateOrModifiedDate(photo);
         if(null == creationDate) {
             creationDate = album.getAlbumInfo().getAlbumDate();
         }
@@ -101,7 +110,7 @@ public class FileReaderThread implements Callable<PhotoUploadResult> {
 
         PhotoEntry photoEntry;
         try {
-            logger.debug("Inserting photoEntry [" + pe.getTitle().getPlainText() + "] to albumUrl [" + album.getAlbumURL() + "]");
+            logger.debug("inserting photoEntry [" + pe.getTitle().getPlainText() + "] to albumUrl [" + album.getAlbumURL() + "]");
             if(Thread.currentThread().isInterrupted()) {
                 throw new InterruptedException(format("photo [%s] not added to albumUrl [%s]", photo.getName(), album.getAlbumURL()));
             }
@@ -119,12 +128,17 @@ public class FileReaderThread implements Callable<PhotoUploadResult> {
             }
             return photoEntry;
         } catch (ServiceException e) {
-            throw new IOException("Unable to add photo to album: ["+e.getMessage()+"]", e);
+            if(null != e.getCause()) {
+                Throwable ex = e.getCause();
+                throw new IOException("Unable to add photo to album: ["+ex.getMessage()+"]", ex);
+            } else {
+                throw new IOException("Unable to add photo to album: ["+e.getMessage()+"]", e);
+            }
         }
     }
 
     private void addTagsToPhoto(PhotoEntry photoEntry) throws ServiceException, IOException, InterruptedException {
-        logger.debug("adding tags to this photo.");
+        logger.debug("adding tags to "+photo.getName()+" ["+photoEntry.getId()+"]");
 
         // add month & year plus albumEntry keywords as tags to this photo.
         URL photoIdUrl = new URL(photoEntry.getFeedLink().getHref());

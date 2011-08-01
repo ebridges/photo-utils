@@ -1,20 +1,24 @@
+/*
+ * Copyright (c) 2011. Edward Q. Bridges <ebridges@gmail.com>
+ * Licensed under the GNU Lesser General Public License v.3.0
+ * http://www.gnu.org/licenses/lgpl.html
+ */
+
 package tinfoil.picasa;
 
 import static java.lang.String.format;
 import static java.util.Collections.unmodifiableList;
+import static tinfoil.Constants.APPLICATION_AGENT;
 import static tinfoil.Util.toDate;
 
-import org.apache.log4j.Logger;
-import tinfoil.Constants;
-
 import java.io.File;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.apache.log4j.Logger;
 
 /**
  * User: ebridges
@@ -50,7 +54,7 @@ public class AlbumInfo {
         this.keywords = makeKeywords(this.folderName);
         logger.debug(format("Extracted [%d] keywords for album. Keywords are: %s",keywords.size(), keywords));
 
-        this.description = this.folder.getAbsolutePath();
+        this.description = format("Album uploaded on %s by [%s]", new Date(), APPLICATION_AGENT);
     }
 
     public File getFolder() {

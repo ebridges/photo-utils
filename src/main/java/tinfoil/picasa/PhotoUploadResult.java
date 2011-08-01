@@ -12,36 +12,25 @@ import tinfoil.Album;
 public class PhotoUploadResult {
     private final Album album;
     private final File photo;
-    private final String message;
-    private final Throwable error;
-    private final boolean successful;
+    private String message;
+    private Throwable error;
 
-    public PhotoUploadResult(Album album, File photo, String message) {
+    public PhotoUploadResult(Album album, File photo) {
         this.album = album;
         this.photo = photo;
-        this.message = message;
-        this.error = null;
-        this.successful = true;
-    }
-
-    public PhotoUploadResult(Album album, File photo, String message, Throwable error) {
-        this.album = album;
-        this.photo = photo;
-        this.message = message;
-        this.error = error;
-        this.successful = (error == null);
+        this.message = "UNPROCESSED";
     }
 
     public Album getAlbum() {
         return album;
     }
 
-    public Boolean isSuccessful() {
-        return successful;
-    }
-
     public File getPhoto() {
         return photo;
+    }
+
+    public Boolean isSuccessful() {
+        return null == error;
     }
 
     public String getMessage() {
@@ -50,5 +39,37 @@ public class PhotoUploadResult {
 
     public Throwable getError() {
         return error;
+    }
+
+    public void setSuccess() {
+        this.message = "SUCCESS";
+    }
+
+    public void setPartiallyProcessed() {
+        this.message = "PARTIALLY_PROCESSED";
+    }
+
+    public void setError(Throwable error) {
+        if(null != error) {
+            this.message = "ERROR";
+            if(null == error.getCause()) {
+                this.error = error;
+            } else {
+                this.error = error.getCause();
+            }
+        }
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder();
+        sb.append("PhotoUploadResult");
+        sb.append("{successful=").append(isSuccessful());
+        sb.append(", album=").append(album);
+        sb.append(", photo=").append(photo);
+        sb.append(", message='").append(message).append('\'');
+        sb.append(", error=").append((null != error ? error.getMessage() : ""));
+        sb.append('}');
+        return sb.toString();
     }
 }

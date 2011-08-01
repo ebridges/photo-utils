@@ -1,8 +1,6 @@
 package tinfoil.picasa;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.log4j.Logger;
-import tinfoil.Credentials;
+import static tinfoil.Util.asList;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -11,18 +9,29 @@ import java.util.Collections;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import static tinfoil.Util.asList;
+import org.apache.commons.cli.CommandLine;
+import org.apache.log4j.Logger;
+import tinfoil.Credentials;
 
 /**
  * User: ebridges
  * Date: 7/26/11
- * Time: 9:23 PM
+ * Time: 9:23 PM  260438
  */
 public class UploadConfiguration {
     private final static Logger logger = Logger.getLogger(UploadConfiguration.class);
 
     public static final int DEFAULT_FOLDER_THREAD_POOL_SIZE = 1;
-    public static final int DEFAULT_FILE_THREAD_POOL_SIZE = 20;
+
+    /**
+     *   PoolSize  Secs
+     *   --------------
+     *      2      260
+     *      4      199
+     *      8      178
+     *     16      146
+     */
+    public static final int DEFAULT_FILE_THREAD_POOL_SIZE = Runtime.getRuntime().availableProcessors()*8;
 
     private final String rootDirectory;
     private final Integer folderThreadPoolSize;
@@ -94,10 +103,11 @@ public class UploadConfiguration {
         sb.append("UploadConfiguration");
         sb.append("{rootDirectory='").append(rootDirectory).append('\'');
         sb.append(", folderThreadPoolSize=").append(folderThreadPoolSize);
+        sb.append(", fileThreadPoolSize=").append(fileThreadPoolSize);
         sb.append(", folderList=").append(folderList);
         sb.append(", credentials=").append(credentials);
-        sb.append(", serviceUrl=").append(serviceUrl);
         sb.append(", overwriteAlbum=").append(overwriteAlbum);
+        sb.append(", serviceUrl=").append(serviceUrl);
         sb.append('}');
         return sb.toString();
     }

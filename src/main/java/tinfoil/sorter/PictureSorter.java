@@ -80,7 +80,7 @@ public class PictureSorter {
             for(File picture : pictures) {
                 log.debug(format("copying file %s", picture.getAbsolutePath()));
                 pictureName = picture.getName();
-                Date createDate = Util.lookupCreateDate(picture);
+                Date createDate = Util.lookupCreateDateOrModifiedDate(picture);
 
                 String destDir = formatDate(createDate, "yyyyMMdd");
                 destPath = new File(destination, destDir);

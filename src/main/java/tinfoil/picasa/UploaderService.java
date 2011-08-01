@@ -1,7 +1,16 @@
+/*
+ * Copyright (c) 2011. Edward Q. Bridges <ebridges@gmail.com>
+ * Licensed under the GNU Lesser General Public License v.3.0
+ * http://www.gnu.org/licenses/lgpl.html
+ */
 package tinfoil.picasa;
 
 import static java.lang.String.format;
-import static org.apache.commons.cli.OptionBuilder.*;
+import static org.apache.commons.cli.OptionBuilder.withArgName;
+
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -11,11 +20,9 @@ import org.apache.commons.cli.MissingArgumentException;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-
 import org.apache.log4j.Logger;
+import tinfoil.Album;
 import tinfoil.Constants;
-
-import java.util.Date;
 
 /**
  * User: ebridges
@@ -59,7 +66,12 @@ public class UploaderService {
     }
 
     private void run() {
-        this.executor.run();
+        try {
+            this.executor.run();
+        } catch (InterruptedException e) {
+            logger.warn("caught interrupted exception.", e);
+            Thread.currentThread().interrupt();
+        }
     }
 
     private void shutdown() {
@@ -89,12 +101,28 @@ public class UploaderService {
             } finally {
                 uploaderService.shutdown();
             }
+
+            uploaderService.reportResults(FileReaderExecutionService.getCompleted());
         } else {
             HELP_FORMATTER.printHelp(Constants.APPLICATION_NAME, OPTIONS);
         }
 
         long end = System.nanoTime();
-        logger.info(format("finished in %.2f secs", ((end-start)/1000000.0)));
+        logger.info(format("finished in %.2f secs", ((end-start)/1000000000.0)));
+    }
+
+    private void reportResults(Map<Album, List<PhotoUploadResult>> completed) {
+        for(Album f : completed.keySet()) {
+            logger.info(format("Album [%s] (%d)",f.getAlbumInfo().getAlbumName(), completed.get(f).size()));
+            for(PhotoUploadResult r : completed.get(f)) {
+                if(r.isSuccessful()) {
+                    logger.info(format("    [%s]: %s",r.getPhoto().getName(), r.getMessage()));
+                } else {
+                    //noinspection ThrowableResultOfMethodCallIgnored
+                    logger.info(format("    [%s]: %s (%s)",r.getPhoto().getName(), r.getMessage(), r.getError().getMessage()));
+                }
+            }
+        }
     }
 
     static {

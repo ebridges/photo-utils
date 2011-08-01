@@ -1,26 +1,10 @@
 package tinfoil;
 
-import com.google.gdata.data.BaseEntry;
-import com.google.gdata.data.BaseFeed;
-import com.google.gdata.data.ExtensionProfile;
-import com.google.gdata.util.common.xml.XmlWriter;
-import org.apache.commons.io.DirectoryWalker;
-import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.io.filefilter.HiddenFileFilter;
-import org.apache.commons.io.filefilter.IOFileFilter;
-import org.apache.log4j.Logger;
-import org.apache.sanselan.ImageReadException;
-import org.apache.sanselan.Sanselan;
-import org.apache.sanselan.common.IImageMetadata;
-import org.apache.sanselan.formats.jpeg.JpegImageMetadata;
-import org.apache.sanselan.formats.tiff.TiffField;
-import org.apache.sanselan.formats.tiff.constants.TiffConstants;
-/*
-import org.metaphile.directory.IDirectory;
-import org.metaphile.file.JpegFile;
-import org.metaphile.segment.ExifSegment;
-import org.metaphile.tag.ITag;
-*/
+import static java.lang.String.format;
+import static org.apache.commons.io.FilenameUtils.getExtension;
+import static org.apache.commons.io.IOCase.INSENSITIVE;
+import static org.apache.commons.io.filefilter.FileFilterUtils.or;
+import static org.apache.commons.io.filefilter.FileFilterUtils.suffixFileFilter;
 
 import java.io.File;
 import java.io.FileFilter;
@@ -39,11 +23,34 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
-import static java.lang.String.format;
-import static org.apache.commons.io.FilenameUtils.getExtension;
-import static org.apache.commons.io.IOCase.INSENSITIVE;
-import static org.apache.commons.io.filefilter.FileFilterUtils.*;
-import static org.apache.commons.io.filefilter.FileFilterUtils.suffixFileFilter;
+import com.drew.imaging.ImageMetadataReader;
+import com.drew.imaging.ImageProcessingException;
+import com.drew.metadata.Directory;
+import com.drew.metadata.Metadata;
+import com.drew.metadata.MetadataException;
+import com.drew.metadata.exif.ExifDirectory;
+import com.google.gdata.data.BaseEntry;
+import com.google.gdata.data.BaseFeed;
+import com.google.gdata.data.ExtensionProfile;
+import com.google.gdata.util.common.xml.XmlWriter;
+import org.apache.commons.io.DirectoryWalker;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.filefilter.HiddenFileFilter;
+import org.apache.commons.io.filefilter.IOFileFilter;
+import org.apache.log4j.Logger;
+import org.apache.sanselan.ImageReadException;
+import org.apache.sanselan.Sanselan;
+import org.apache.sanselan.common.IImageMetadata;
+import org.apache.sanselan.formats.jpeg.JpegImageMetadata;
+import org.apache.sanselan.formats.tiff.TiffField;
+import org.apache.sanselan.formats.tiff.constants.TiffConstants;
+
+/*
+import org.metaphile.directory.IDirectory;
+import org.metaphile.file.JpegFile;
+import org.metaphile.segment.ExifSegment;
+import org.metaphile.tag.ITag;
+*/
 
 /**
  * <b>Util</b>
@@ -75,7 +82,13 @@ public class Util {
         return "AVI".equalsIgnoreCase(extension) || "MOV".equalsIgnoreCase(extension);
     }
 
-
+    /**
+     * Returns null if it can't figure out the create date.
+     * 
+     * @param file
+     * @return
+     * @throws IOException
+     */
     public static Date lookupCreateDateAlt(final File file) throws IOException {
         File picture = file;
         if(isVideo(picture)) {
@@ -88,11 +101,12 @@ public class Util {
         }
 
         // default to last modified date.
-        Date createDate = new Date(picture.lastModified());
+        Date createDate = null;
         String mimeType = getTypeFromPicture(picture);
         if(mimeType.endsWith("jpeg") || getExtension(picture.getAbsolutePath()).equalsIgnoreCase("THM")) {
             try {
                 IImageMetadata metadata = Sanselan.getMetadata(picture);
+
                 if (metadata instanceof JpegImageMetadata)  {
                     JpegImageMetadata jpegMetadata = (JpegImageMetadata) metadata;
                     TiffField field = jpegMetadata.findEXIFValue(TiffConstants.EXIF_TAG_CREATE_DATE);
@@ -100,8 +114,8 @@ public class Util {
                     if (field == null) {
                         jpegMetadata.dump();
 //                        throw new IllegalArgumentException(format("unable to locate create date in metadata for photo %s", picture.getAbsolutePath()));
-                        log.info("Unable to get create date from EXIF info, using file modification time instead.");
-                        return new Date(picture.lastModified());
+                        log.warn("Unable to get create date from EXIF info.");
+                        return createDate;
                     }
                    // log.debug(format("tag %s: %s", field.getTagName(), field.getStringValue()));
                     String date = field.getStringValue();
@@ -113,13 +127,39 @@ public class Util {
                 }
 
             } catch (ImageReadException e) {
-                throw new IOException(e);
+                log.warn("Caught ImageReadException: "+e.getMessage());
             }
         } else {
-            log.warn("Can't get create date for file: "+picture.getAbsolutePath());
+            log.warn("unsupported file type: "+picture.getAbsolutePath());
         }
 
-        assert null != createDate;
+        return createDate;
+    }
+
+    public static Date lookupCreateDateAlt2(File file) {
+        Date createDate = null;
+        try {
+            Metadata metadata = ImageMetadataReader.readMetadata(file);
+
+            /*
+            Iterator i = metadata.getDirectoryIterator();
+            while( i.hasNext()) {
+                Directory d = (Directory) i.next();
+                Iterator ii = d.getTagIterator();
+                while(ii.hasNext()) {
+                    Object o = ii.next();
+                    System.out.println(o.toString());
+                }
+            }
+            */
+
+            Directory directory = metadata.getDirectory(ExifDirectory.class);
+            createDate = directory.getDate(ExifDirectory.TAG_DATETIME_ORIGINAL);
+        } catch (ImageProcessingException e) {
+            log.warn(format("caught ImageProcessingException [%s] [%s]", e.getMessage(), file.getAbsolutePath()));
+        } catch (MetadataException e) {
+            log.warn(format("caught MetadataException [%s] [%s]", e.getMessage(), file.getAbsolutePath()));
+        }
         return createDate;
     }
 
@@ -128,13 +168,19 @@ public class Util {
         return new File(file.getParentFile(), newFile);
     }
 
-    public static Date lookupCreateDate(File picture) throws IOException {
-        //return lookupCreateDate(getTypeFromPicture(picture), picture);
-        return lookupCreateDateAlt( picture);
+    public static Date lookupCreateDateOrModifiedDate(File picture) throws IOException {
+        //return lookupCreateDateOrModifiedDate(getTypeFromPicture(picture), picture);
+        //return lookupCreateDateAlt( picture);
+        Date date = lookupCreateDateAlt2(picture);
+        if(null == date) {
+            return new Date(picture.lastModified());
+        } else {
+            return date;
+        }
     }
 
     /*
-    public static Date lookupCreateDate(String mimeType, File picture) {
+    public static Date lookupCreateDateOrModifiedDate(String mimeType, File picture) {
         Date createDate = null;
 
         try {
@@ -328,8 +374,8 @@ public class Util {
     private static class PictureCreateDateComparator implements Comparator<File> {
         public int compare(File L, File R) {
             try {
-                Date left = lookupCreateDate(L);
-                Date right = lookupCreateDate(R);
+                Date left = lookupCreateDateOrModifiedDate(L);
+                Date right = lookupCreateDateOrModifiedDate(R);
 
                 return left.compareTo(right);
             } catch (IOException e) {

@@ -1,7 +1,12 @@
+/*
+ * Copyright (c) 2011. Edward Q. Bridges <ebridges@gmail.com>
+ * Licensed under the GNU Lesser General Public License v.3.0
+ * http://www.gnu.org/licenses/lgpl.html
+ */
+
 package tinfoil.picasa;
 
 import static java.lang.String.format;
-import static java.util.Collections.synchronizedList;
 import static java.util.Collections.unmodifiableList;
 import static java.util.concurrent.Executors.newFixedThreadPool;
 
@@ -13,7 +18,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Callable;
 import java.util.concurrent.CompletionService;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -21,6 +25,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
 import tinfoil.Album;
@@ -35,47 +40,45 @@ import tinfoil.Util;
 public class FileReaderExecutionService {
     private static final Logger logger = Logger.getLogger(FileReaderExecutionService.class);
 
-    private static ConcurrentMap<File, List<PhotoUploadResult>> COMPLETED = new ConcurrentHashMap<File, List<PhotoUploadResult>>();
+    private static ConcurrentMap<Album, List<PhotoUploadResult>> COMPLETED = new ConcurrentHashMap<Album, List<PhotoUploadResult>>();
 
     private final ExecutorService executor;
     private final UploadConfiguration configuration;
-    private final CompletionService<PhotoUploadResult> completionService;
+    private final CompletionService<String> completionService;
 
     public FileReaderExecutionService(final UploadConfiguration configuration) {
         this.configuration = configuration;
 
-        this.executor = new SerialExecutor(
-            newFixedThreadPool(
-                this.configuration.getFileThreadPoolSize()
-            )
+        this.executor = newFixedThreadPool(
+            this.configuration.getFileThreadPoolSize()
         );
 
-        this.completionService = new ExecutorCompletionService<PhotoUploadResult>(
+        this.completionService = new ExecutorCompletionService<String>(
             this.executor
         );
     }
 
-    public static Map<File, List<PhotoUploadResult>> getCompleted() {
+    public static Map<Album, List<PhotoUploadResult>> getCompleted() {
         return (COMPLETED);
     }
 
-    public void addFilesFromFolderToAlbum(final File folder, final Album album) throws AuthenticationException {
-        List<Callable<PhotoUploadResult>> photos = getPhotosToUpload(album, folder);
-        Set<Future<PhotoUploadResult>> futures = new HashSet<Future<PhotoUploadResult>>();
+    public void addFilesFromFolderToAlbum(final File folder, final Album album) throws AuthenticationException, InterruptedException {
+        List<FileReaderThread> photos = getPhotosToUpload(album, folder);
+        Set<Future<String>> futures = new HashSet<Future<String>>();
 
         logger.info(format("adding %d photos to album [%s]", photos.size(), album.getAlbumInfo().getAlbumName()));
 
-         for(Callable<PhotoUploadResult> photo : photos ) {
+        for(FileReaderThread photo : photos ) {
             futures.add(
                 this.completionService.submit(photo)
             );
         }
 
-        Future<PhotoUploadResult> completedFuture;
-        PhotoUploadResult result = null;
+        Future<String> completedFuture;
+        String result = null;
 
-        while (futures.size() > 0) {
-            try {
+        try {
+            while (futures.size() > 0) {
                 completedFuture = this.completionService.take();
                 if(null == completedFuture) {
                     logger.warn("got null completedFuture.");
@@ -87,42 +90,46 @@ public class FileReaderExecutionService {
                 try {
                     result = completedFuture.get();
 
-                    if(!COMPLETED.containsKey(folder)) {
-                        COMPLETED.putIfAbsent(folder, synchronizedList(new LinkedList<PhotoUploadResult>()));
-                    }
-                    COMPLETED.get(folder).add(result);
-
                 } catch (ExecutionException e) {
                     Throwable cause = e.getCause();
-                    logger.warn("completion service failed. (result: " + result + ")", cause);
+                    logger.warn("completion service failed on [" + result + "]", cause);
 
-                    for (Future<PhotoUploadResult> f: futures) {
+                    for (Future<String> f: futures) {
                         f.cancel(true);
                     }
 
-                    this.executor.shutdown();
-
                     break;
                 }
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        } finally {
+            this.executor.shutdown();
+            boolean success = this.executor.awaitTermination(5, TimeUnit.SECONDS);
+            if (!success) {
+                this.executor.shutdownNow();
             }
         }
     }
 
-    private List<Callable<PhotoUploadResult>> getPhotosToUpload(final Album album, File folder) throws AuthenticationException {
+    private List<FileReaderThread> getPhotosToUpload(final Album album, final File folder) throws AuthenticationException {
         final File[] photos = folder.listFiles((FileFilter)Util.PHOTO_FILE_FILTER);
-        final List<Callable<PhotoUploadResult>> callables = new ArrayList<Callable<PhotoUploadResult>>(photos.length);
+        final List<FileReaderThread> callables = new ArrayList<FileReaderThread>(photos.length);
+        final List<PhotoUploadResult> results = new LinkedList<PhotoUploadResult>();
 
         for(final File photo : photos) {
             if(photo.exists() && photo.canRead()) {
+                PhotoUploadResult result = new PhotoUploadResult(album, photo);
+                results.add(result);
                 callables.add(
-                    new FileReaderThread(album, photo, this.configuration)
+                    new FileReaderThread(album, photo, this.configuration, result)
                 );
             } else {
                 logger.warn(format("Unable to access photo [%s]", photo.getAbsolutePath()));
             }
         }
+
+        COMPLETED.put(album, unmodifiableList(results));
 
         return unmodifiableList(callables);
     }

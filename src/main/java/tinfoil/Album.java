@@ -77,7 +77,7 @@ class PicasaAlbum implements Album {
 
                 pe.setKeywords( albumEntry.getMediaKeywords() );
 
-                Date creationDate = Util.lookupCreateDate(picture);
+                Date creationDate = Util.lookupCreateDateOrModifiedDate(picture);
                 if(null == creationDate) {
 		    // try {
                         creationDate = albumEntry.getDate();

@@ -1,6 +1,9 @@
 package tinfoil.picasa;
 
-import org.apache.log4j.Logger;
+import static java.lang.String.format;
+import static java.util.concurrent.Executors.newFixedThreadPool;
+import static tinfoil.Util.PICTURE_DIRECTORY_FILE_FILTER;
+import static tinfoil.Util.isEmpty;
 
 import java.io.File;
 import java.util.ArrayDeque;
@@ -11,7 +14,6 @@ import java.util.List;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.AbstractExecutorService;
-import java.util.concurrent.Callable;
 import java.util.concurrent.CompletionService;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorCompletionService;
@@ -19,11 +21,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import static java.lang.String.format;
-import static java.util.concurrent.Executors.newFixedThreadPool;
-
-import static tinfoil.Util.PICTURE_DIRECTORY_FILE_FILTER;
-import static tinfoil.Util.isEmpty;
+import org.apache.log4j.Logger;
+import tinfoil.Album;
 
 /**
  * User: ebridges
@@ -35,7 +34,7 @@ public class FolderReaderExecutionService {
 
     private final ExecutorService executor;
     private final UploadConfiguration configuration;
-    private final CompletionService<String> completionService;
+    private final CompletionService<Album> completionService;
 
     public FolderReaderExecutionService(UploadConfiguration configuration) {
         this.configuration = configuration;
@@ -46,28 +45,27 @@ public class FolderReaderExecutionService {
             )
         );
 
-        this.completionService = new ExecutorCompletionService<String>(
+        this.completionService = new ExecutorCompletionService<Album>(
             this.executor
         );
     }
 
-    public void run() {
+    public void run() throws InterruptedException {
         logger.debug("beginning uploader service.");
 
-        Set<Future<String>> futures = new HashSet<Future<String>>();
+        Set<Future<Album>> futures = new HashSet<Future<Album>>();
  
-         for(Callable<String> data : getUploadData()) {
+         for(FolderReaderThread data : getUploadData()) {
             futures.add(
                 this.completionService.submit(data)
             );
         }
 
-        Future<String> completedFuture;
-        String result = null;
+        Future<Album> completedFuture;
+        Album result = null;
 
-        while (futures.size() > 0) {
-            // block until a callable completes
-            try {
+        try {
+            while (!futures.isEmpty()) {
                 completedFuture = this.completionService.take();
                 if(null == completedFuture) {
                     logger.warn("got null completedFuture.");
@@ -84,17 +82,20 @@ public class FolderReaderExecutionService {
                     Throwable cause = e.getCause();
                     logger.warn("completion service failed. (result: "+ result + ")", cause);
 
-                    this.executor.shutdown();
-                    
-                    for (Future<String> f: futures) {
-                        // pass true if you wish to cancel in-progress Callables as well as pending Callables
+                    for (Future<Album> f: futures) {
                         f.cancel(true);
                     }
 
                     break;
                 }
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        } finally {
+            this.executor.shutdown();
+            boolean success = this.executor.awaitTermination(5, TimeUnit.SECONDS);
+            if (!success) {
+                this.executor.shutdownNow();
             }
         }
     }

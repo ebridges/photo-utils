@@ -1,8 +1,5 @@
 package tinfoil;
 
-import com.sun.istack.internal.FinalArrayList;
-import com.sun.tools.internal.xjc.reader.xmlschema.bindinfo.BIConversion;
-
 import javax.activation.MimetypesFileTypeMap;
 
 /**
@@ -13,6 +10,12 @@ import javax.activation.MimetypesFileTypeMap;
 
 public class Constants {
     public static final MimetypesFileTypeMap MIMETYPE_MAP = new MimetypesFileTypeMap();
+    static {
+        MIMETYPE_MAP.addMimeTypes("image/png png");
+        MIMETYPE_MAP.addMimeTypes("image/tiff tiff tif");
+        MIMETYPE_MAP.addMimeTypes("image/bmp bmp");
+        MIMETYPE_MAP.addMimeTypes("image/gif gif");
+    }
 
     public static final String APPLICATION_VENDOR = "tinfoil";
     public static final String APPLICATION_NAME = "picasa-uploader";

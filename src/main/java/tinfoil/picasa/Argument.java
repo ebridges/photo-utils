@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2011. Edward Q. Bridges <ebridges@gmail.com>
+ * Licensed under the GNU Lesser General Public License v.3.0
+ * http://www.gnu.org/licenses/lgpl.html
+ */
+
 package tinfoil.picasa;
 
 /**
