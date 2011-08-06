@@ -182,6 +182,11 @@ public class FolderReaderExecutionService {
         if(!this.executor.isShutdown()) {
             this.executor.shutdownNow();
         }
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 }
 

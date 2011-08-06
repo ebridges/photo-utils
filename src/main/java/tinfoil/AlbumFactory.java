@@ -1,36 +1,26 @@
 package tinfoil;
 
-import com.google.gdata.client.Service;
+import static java.lang.String.format;
+
+import java.io.IOException;
+import java.net.URL;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
+
 import com.google.gdata.client.photos.PicasawebService;
-import com.google.gdata.data.Kind;
 import com.google.gdata.data.Link;
 import com.google.gdata.data.Person;
 import com.google.gdata.data.PlainTextConstruct;
 import com.google.gdata.data.TextConstruct;
-import com.google.gdata.data.media.MediaSource;
 import com.google.gdata.data.media.mediarss.MediaKeywords;
 import com.google.gdata.data.photos.AlbumEntry;
 import com.google.gdata.data.photos.GphotoEntry;
-import com.google.gdata.data.photos.GphotoFeed;
 import com.google.gdata.data.photos.UserFeed;
 import com.google.gdata.util.ServiceException;
-import com.sun.xml.internal.bind.v2.model.core.ID;
 import org.apache.log4j.Logger;
-import org.omg.CORBA.UNSUPPORTED_POLICY;
-import sun.jvm.hotspot.utilities.UnsupportedPlatformException;
 import tinfoil.picasa.AlbumInfo;
 import tinfoil.picasa.PhotoService;
 import tinfoil.picasa.UploadConfiguration;
-
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
-
-import static java.lang.String.format;
 
 /**
  * <b>AlbumFactory</b>
@@ -140,6 +130,6 @@ class PicasaAlbumFactory extends AlbumFactory {
 
         long id = FOLDER_COUNTER.incrementAndGet();
         log.info(format("[%d]: folder name (%s), entry id (%s), editUri (%s), etag (%s)", id, albumEntry.getName(), albumEntry.getId(), albumEntry.getEditLink().getHref(), albumEntry.getEtag()));
-        return new PicasaAlbum(configuration, albumEntry, albumInfo);
+        return new PicasaAlbum(albumEntry, albumInfo);
     }
 }

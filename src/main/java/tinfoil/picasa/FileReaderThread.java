@@ -76,6 +76,7 @@ public class FileReaderThread implements Callable<String> {
     }
 
     private PhotoEntry initalizePhotoEntry() throws IOException, InterruptedException {
+        logger.info(format("adding photo [%s] to album [%s]", photo.getName(), album.getAlbumInfo().getAlbumName()));
         PhotoEntry pe = new PhotoEntry();
         String mimeType = getTypeFromPicture(photo);
 
@@ -110,10 +111,10 @@ public class FileReaderThread implements Callable<String> {
 
         PhotoEntry photoEntry;
         try {
-            logger.debug("inserting photoEntry [" + pe.getTitle().getPlainText() + "] to albumUrl [" + album.getAlbumURL() + "]");
             if(Thread.currentThread().isInterrupted()) {
                 throw new InterruptedException(format("photo [%s] not added to albumUrl [%s]", photo.getName(), album.getAlbumURL()));
             }
+            logger.debug("inserting photoEntry [" + pe.getTitle().getPlainText() + "] to albumUrl [" + album.getAlbumURL() + "]");
             photoEntry = service.insert( album.getAlbumURL(), pe);
             assert photoEntry != null;
 
@@ -128,17 +129,12 @@ public class FileReaderThread implements Callable<String> {
             }
             return photoEntry;
         } catch (ServiceException e) {
-            if(null != e.getCause()) {
-                Throwable ex = e.getCause();
-                throw new IOException("Unable to add photo to album: ["+ex.getMessage()+"]", ex);
-            } else {
-                throw new IOException("Unable to add photo to album: ["+e.getMessage()+"]", e);
-            }
+            throw new FileUploadException(this.album, this.photo, e);
         }
     }
 
     private void addTagsToPhoto(PhotoEntry photoEntry) throws ServiceException, IOException, InterruptedException {
-        logger.debug("adding tags to "+photo.getName()+" ["+photoEntry.getId()+"]");
+        logger.debug("adding tags to "+photo.getName());
 
         // add month & year plus albumEntry keywords as tags to this photo.
         URL photoIdUrl = new URL(photoEntry.getFeedLink().getHref());
@@ -148,22 +144,25 @@ public class FileReaderThread implements Callable<String> {
         TagEntry monthTag = new TagEntry();
         monthTag.setTitle(new PlainTextConstruct(MONTHS.get(my.getFirst())));
         monthTag.setWeight(my.getFirst() + 5000);
+        logger.trace("    Adding month tag [" + monthTag.getTitle().getPlainText() + "] to photo URL [" + photoIdUrl + "]");
+        try {
+            service.insert( photoIdUrl, monthTag );
+        } catch (ServiceException e) {
+            throw new FileUploadException(this.album, this.photo, "adding month tag", e);
+        }
 
         TagEntry yearTag = new TagEntry();
         yearTag.setTitle(new PlainTextConstruct(my.getSecond().toString()));
         yearTag.setWeight(my.getSecond());
-
+        logger.trace("    Adding year tag [" + yearTag.getTitle().getPlainText() + "] to photo URL [" + photoIdUrl + "]");
         try {
-            logger.trace("    Adding month tag [" + monthTag.getTitle().getPlainText() + "] to photo URL [" + photoIdUrl + "]");
-            service.insert( photoIdUrl, monthTag );
-            logger.trace("    Adding year tag [" + yearTag.getTitle().getPlainText() + "] to photo URL [" + photoIdUrl + "]");
             service.insert( photoIdUrl, yearTag );
         } catch (ServiceException e) {
-            throw new IOException("Unable to add month/year tag to photo: ["+e.getMessage()+"]", e);
+            throw new FileUploadException(this.album, this.photo, "adding year tag", e);
         }
 
         if(null != album.getAlbumInfo().getKeywords() && !album.getAlbumInfo().getKeywords().isEmpty()) {
-            int cnt=0;
+           // int cnt=0;
             for( final String keyword : album.getAlbumInfo().getKeywords()) {
                 if(null != keyword && keyword.length() > 0) {
                     TagEntry tag = new TagEntry();
@@ -172,20 +171,22 @@ public class FileReaderThread implements Callable<String> {
                         logger.trace("    Adding tag [" + tag.getTitle().getPlainText() + "] to photo URL [" + photoIdUrl + "]");
                         TagEntry tagEntry = service.insert( photoIdUrl, tag );
 
-                        logger.trace("    Tag Entry ID: " + tagEntry.getId());
-                        for(Link l : tagEntry.getLinks()) {
-                            logger.trace("    Tag Entry Link - REL: [" + l.getRel() + "] HREF: [" + l.getHref() + "]");
+                        if(logger.isTraceEnabled()){
+                            logger.trace("    Tag Entry ID: " + tagEntry.getId());
+                            for(Link l : tagEntry.getLinks()) {
+                                logger.trace("    Tag Entry Link - REL: [" + l.getRel() + "] HREF: [" + l.getHref() + "]");
+                            }
+                            logger.trace("    Tag Entry Edit Link: " + tagEntry.getEditLink().getHref());
+                            logger.trace("    Tag Entry Self Link: " + tagEntry.getSelfLink().getHref());
                         }
-                        logger.trace("    Tag Entry Edit Link: " + tagEntry.getEditLink().getHref());
-                        logger.trace("    Tag Entry Self Link: " + tagEntry.getSelfLink().getHref());
                     } catch (ServiceException e) {
-                        throw new IOException("Unable to add tag to photo: ["+e.getMessage()+"]", e);
+                        throw new FileUploadException(this.album, this.photo, "adding tag ["+ tag + "]", e);
                     }
                 }
-                cnt++;
-                if(Thread.currentThread().isInterrupted()) {
-                    throw new InterruptedException(format("only %d of %d total num of tags added to photo [%s] in album [%s]", cnt, album.getAlbumInfo().getKeywords().size(), photo.getName(), album.getAlbumURL()));
-                }
+              //  cnt++;
+               // if(Thread.currentThread().isInterrupted()) {
+               //     throw new InterruptedException(format("only %d of %d total num of tags added to photo [%s] in album [%s]", cnt, album.getAlbumInfo().getKeywords().size(), photo.getName(), album.getAlbumURL()));
+               // }
             }
         }
     }

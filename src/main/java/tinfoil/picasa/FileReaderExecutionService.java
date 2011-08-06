@@ -21,7 +21,6 @@ import java.util.Set;
 import java.util.concurrent.CompletionService;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -84,25 +83,22 @@ public class FileReaderExecutionService {
                     logger.warn("got null completedFuture.");
                     continue;
                 }
-
                 futures.remove(completedFuture);
-
-                try {
-                    result = completedFuture.get();
-
-                } catch (ExecutionException e) {
-                    Throwable cause = e.getCause();
-                    logger.warn("completion service failed on [" + result + "]", cause);
-
-                    for (Future<String> f: futures) {
-                        f.cancel(true);
-                    }
-
-                    break;
-                }
+                result = completedFuture.get();
+                
             }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
+        } catch (Throwable e) {
+            Throwable t = e;
+            if(null != e.getCause())
+                t = e.getCause();
+            logger.warn("upload failed when uploading [" + result + "], cause ["+t.getMessage()+"]",t);
+
+            for (Future<String> f: futures) {
+                f.cancel(true);
+            }
+
+            if(e instanceof InterruptedException)
+                Thread.currentThread().interrupt();
         } finally {
             this.executor.shutdown();
             boolean success = this.executor.awaitTermination(5, TimeUnit.SECONDS);
