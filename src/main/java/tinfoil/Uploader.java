@@ -10,7 +10,7 @@ import static java.lang.String.format;
 
 public class Uploader {
     /*
-    private static final Logger log = Logger.getLogger(Uploader.class);
+    private static final Logger log = LoggerFactory.getLogger(Uploader.class);
 
     public static void main(String[] args) throws Exception {
         log.info("Begin uploading.");

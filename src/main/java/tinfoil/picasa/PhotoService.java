@@ -1,7 +1,8 @@
 package tinfoil.picasa;
 
 import com.google.gdata.client.photos.PicasawebService;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tinfoil.AuthenticationException;
 import tinfoil.Constants;
 import tinfoil.Credentials;
@@ -16,7 +17,7 @@ import static java.lang.String.format;
  * Time: 1:15 PM
  */
 public class PhotoService {
-    private static final Logger log = Logger.getLogger(PhotoService.class);
+    private static final Logger log = LoggerFactory.getLogger(PhotoService.class);
     private static final AtomicLong INSTANCE_COUNTER = new AtomicLong();
 
     public PicasawebService init(Credentials credentials) throws AuthenticationException {

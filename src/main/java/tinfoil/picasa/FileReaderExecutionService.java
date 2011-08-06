@@ -26,7 +26,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tinfoil.Album;
 import tinfoil.AuthenticationException;
 import tinfoil.Util;
@@ -37,7 +38,7 @@ import tinfoil.Util;
  * Time: 2:10 PM
  */
 public class FileReaderExecutionService {
-    private static final Logger logger = Logger.getLogger(FileReaderExecutionService.class);
+    private static final Logger logger = LoggerFactory.getLogger(FileReaderExecutionService.class);
 
     private static ConcurrentMap<Album, List<PhotoUploadResult>> COMPLETED = new ConcurrentHashMap<Album, List<PhotoUploadResult>>();
 

@@ -17,7 +17,8 @@ import com.google.gdata.data.photos.AlbumEntry;
 import com.google.gdata.data.photos.GphotoEntry;
 import com.google.gdata.data.photos.UserFeed;
 import com.google.gdata.util.ServiceException;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tinfoil.picasa.AlbumInfo;
 import tinfoil.picasa.PhotoService;
 import tinfoil.picasa.UploadConfiguration;
@@ -43,7 +44,7 @@ public abstract class AlbumFactory {
 }
 
 class PicasaAlbumFactory extends AlbumFactory {
-    private static final Logger log = Logger.getLogger(PicasaAlbumFactory.class);
+    private static final Logger log = LoggerFactory.getLogger(PicasaAlbumFactory.class);
     private static final AtomicLong FOLDER_COUNTER = new AtomicLong();
 
     private final UploadConfiguration configuration;

@@ -1,7 +1,8 @@
 package tinfoil.dao;
 
 import junit.framework.TestCase;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
@@ -14,7 +15,7 @@ import java.util.List;
 
 
 public class DigikamAlbumDAOTest extends TestCase {
-    private static final Logger log = Logger.getLogger(DigikamAlbumDAOTest.class);
+    private static final Logger log = LoggerFactory.getLogger(DigikamAlbumDAOTest.class);
     private DigikamAlbumDAO dao;
 
     public void testListAllDigikamAlbums() {

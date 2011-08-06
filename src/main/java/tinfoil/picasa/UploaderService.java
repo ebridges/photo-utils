@@ -20,7 +20,8 @@ import org.apache.commons.cli.MissingArgumentException;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tinfoil.Album;
 import tinfoil.Constants;
 
@@ -30,7 +31,7 @@ import tinfoil.Constants;
  * Time: 9:20 PM
  */
 public class UploaderService {
-    private static final Logger logger = Logger.getLogger(UploaderService.class);
+    private static final Logger logger = LoggerFactory.getLogger(UploaderService.class);
 
     private static final Options OPTIONS = new Options();
     private static final HelpFormatter HELP_FORMATTER = new HelpFormatter();

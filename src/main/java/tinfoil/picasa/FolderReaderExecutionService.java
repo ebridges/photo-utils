@@ -21,7 +21,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tinfoil.Album;
 
 /**
@@ -30,7 +31,7 @@ import tinfoil.Album;
  * Time: 9:30 PM
  */
 public class FolderReaderExecutionService {
-    private static final Logger logger = Logger.getLogger(FolderReaderExecutionService.class);
+    private static final Logger logger = LoggerFactory.getLogger(FolderReaderExecutionService.class);
 
     private final ExecutorService executor;
     private final UploadConfiguration configuration;

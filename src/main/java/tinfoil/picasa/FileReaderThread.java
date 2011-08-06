@@ -28,7 +28,8 @@ import com.google.gdata.data.photos.PhotoEntry;
 import com.google.gdata.data.photos.TagEntry;
 import com.google.gdata.util.ServiceException;
 import com.google.gdata.util.common.base.Pair;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tinfoil.Album;
 import tinfoil.AuthenticationException;
 import tinfoil.Constants;
@@ -39,7 +40,7 @@ import tinfoil.Constants;
  * Time: 3:47 PM
  */
 public class FileReaderThread implements Callable<String> {
-    private final Logger logger = Logger.getLogger(FileReaderThread.class);
+    private final Logger logger = LoggerFactory.getLogger(FileReaderThread.class);
 
     private final Album album;
     private final File photo;

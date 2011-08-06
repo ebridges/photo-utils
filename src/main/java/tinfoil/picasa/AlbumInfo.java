@@ -18,7 +18,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * User: ebridges
@@ -26,7 +27,7 @@ import org.apache.log4j.Logger;
  * Time: 10:01 AM
  */
 public class AlbumInfo {
-    private final static Logger logger = Logger.getLogger(AlbumInfo.class);
+    private final static Logger logger = LoggerFactory.getLogger(AlbumInfo.class);
 
     private final File folder;
     private final String folderName;

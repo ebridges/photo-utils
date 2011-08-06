@@ -6,7 +6,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.Callable;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tinfoil.Album;
 import tinfoil.AlbumFactory;
 import tinfoil.AuthenticationException;
@@ -18,7 +19,7 @@ import tinfoil.AuthenticationException;
  */
 
 public class FolderReaderThread implements Callable<Album> {
-    private final static Logger logger = Logger.getLogger(FolderReaderThread.class);
+    private final static Logger logger = LoggerFactory.getLogger(FolderReaderThread.class);
 
     private final File folder;
     private final UploadConfiguration configuration;

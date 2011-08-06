@@ -10,7 +10,8 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import org.apache.commons.cli.CommandLine;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tinfoil.Credentials;
 
 /**
@@ -19,7 +20,7 @@ import tinfoil.Credentials;
  * Time: 9:23 PM  260438
  */
 public class UploadConfiguration {
-    private final static Logger logger = Logger.getLogger(UploadConfiguration.class);
+    private final static Logger logger = LoggerFactory.getLogger(UploadConfiguration.class);
 
     public static final int DEFAULT_FOLDER_THREAD_POOL_SIZE = 1;
 

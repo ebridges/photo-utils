@@ -2,7 +2,8 @@ package tinfoil.sorter;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tinfoil.Util;
 
 import java.io.File;
@@ -26,7 +27,7 @@ import static tinfoil.Util.isVideo;
  * Time: 5:57 AM
  */
 public class PictureSorter {
-    private static final Logger log = Logger.getLogger(PictureSorter.class);
+    private static final Logger log = LoggerFactory.getLogger(PictureSorter.class);
 
     private static final String IMAGE_BASENAME = "img";
 

@@ -35,11 +35,16 @@
       <version>1.4.1</version>
     </dependency> 
     <dependency>
-      <groupId>log4j</groupId>
-      <artifactId>log4j</artifactId>
-      <version>1.2.15</version>
-    </dependency> 
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-api</artifactId>
+        <version>1.6.1</version>
+    </dependency>
     <dependency>
+        <groupId>ch.qos.logback</groupId>
+        <artifactId>logback-classic</artifactId>
+        <version>0.9.29</version>
+    </dependency>
+      <dependency>
       <groupId>com.google.common</groupId>
       <artifactId>google-collect</artifactId>
       <version>1.0-rc1</version>

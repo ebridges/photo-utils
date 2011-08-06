@@ -37,14 +37,16 @@ import org.apache.commons.io.DirectoryWalker;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.filefilter.HiddenFileFilter;
 import org.apache.commons.io.filefilter.IOFileFilter;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+/*
 import org.apache.sanselan.ImageReadException;
 import org.apache.sanselan.Sanselan;
 import org.apache.sanselan.common.IImageMetadata;
 import org.apache.sanselan.formats.jpeg.JpegImageMetadata;
 import org.apache.sanselan.formats.tiff.TiffField;
 import org.apache.sanselan.formats.tiff.constants.TiffConstants;
-
+*/
 /*
 import org.metaphile.directory.IDirectory;
 import org.metaphile.file.JpegFile;
@@ -59,7 +61,7 @@ import org.metaphile.tag.ITag;
  */
 
 public class Util {
-    private static final Logger log = Logger.getLogger(Util.class);
+    private static final Logger log = LoggerFactory.getLogger(Util.class);
 
     public static String formatDate(Date date, String format) {
         if(null == date) {
@@ -82,13 +84,13 @@ public class Util {
         return "AVI".equalsIgnoreCase(extension) || "MOV".equalsIgnoreCase(extension);
     }
 
-    /**
+    /* *
      * Returns null if it can't figure out the create date.
      * 
      * @param file
      * @return
      * @throws IOException
-     */
+     *
     public static Date lookupCreateDateAlt(final File file) throws IOException {
         File picture = file;
         if(isVideo(picture)) {
@@ -135,6 +137,7 @@ public class Util {
 
         return createDate;
     }
+    */
 
     public static Date lookupCreateDateAlt2(File file) {
         Date createDate = null;
@@ -248,6 +251,7 @@ public class Util {
      * @param out   The output stream to write to.
      * @throws java.io.IOException Thrown when error writing.
      */
+    @SuppressWarnings({"UnusedDeclaration"})
     public static void dump(BaseEntry entry, OutputStream out)
             throws IOException {
         Writer w = new OutputStreamWriter(out);
@@ -263,6 +267,7 @@ public class Util {
      * @param out  The output stream to write to.
      * @throws java.io.IOException Thrown when error writing.
      */
+    @SuppressWarnings({"UnusedDeclaration"})
     public static void dump(BaseFeed feed, OutputStream out)
             throws IOException {
         Writer w = new OutputStreamWriter(out);
@@ -275,6 +280,7 @@ public class Util {
         return (v == null || v.length() < 1);
     }
     
+    @SuppressWarnings({"UnusedDeclaration"})
     public static void waitSome(long i) {
         log.info("Pausing for "+i+" seconds.");
         try {
@@ -361,6 +367,7 @@ public class Util {
         }
     }
 
+    @SuppressWarnings({"UnusedDeclaration"})
     public static PictureDirectoryComparator PICTURE_DIRECTORY_COMPARATOR = new PictureDirectoryComparator();
     
     private static class PictureDirectoryComparator implements Comparator<File> {
