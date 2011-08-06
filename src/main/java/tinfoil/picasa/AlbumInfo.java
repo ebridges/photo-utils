@@ -55,7 +55,7 @@ public class AlbumInfo {
         this.keywords = makeKeywords(this.folderName);
         logger.debug(format("Extracted [%d] keywords for album. Keywords are: %s",keywords.size(), keywords));
 
-        this.description = format("Album uploaded on %s by [%s]", new Date(), APPLICATION_AGENT);
+        this.description = format("Album uploaded on %s\n[%s]", new Date(), APPLICATION_AGENT);
     }
 
     public File getFolder() {
