@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.google.gdata.client.photos.PicasawebService;
-import com.google.gdata.data.Link;
 import com.google.gdata.data.Person;
 import com.google.gdata.data.PlainTextConstruct;
 import com.google.gdata.data.TextConstruct;
@@ -64,31 +63,39 @@ class PicasaAlbumFactory extends AlbumFactory {
             }
             log.debug(format("located albumEntry for deleting [%s]", albumEntry.getId()));
 
-            Link editLink = albumEntry.getEditLink();
+            albumEntry.delete();
 
-            this.service.delete(new URL(editLink.getHref()), albumEntry.getEtag());
-
-            log.info(format("deleted album [%s] using URL (%s)",albumInfo.getAlbumName(), editLink.getHref()));
+            log.info(format("deleted album [%s]",albumInfo.getAlbumName()));
         } catch (ServiceException e) {
             throw new IllegalArgumentException(e);
         }
     }
 
     private AlbumEntry lookupEntry(AlbumInfo albumInfo) throws ServiceException, IOException {
+        AlbumEntry albumEntry = null;
         UserFeed userFeed = service.getFeed(new URL(this.configuration.getCredentials().serviceUrl()), UserFeed.class);
         List<GphotoEntry> entries = userFeed.getEntries();
-        AlbumEntry albumEntry = null;
-        for (GphotoEntry entry : entries) {
-          GphotoEntry adapted = entry.getAdaptedEntry();
-          if (adapted instanceof AlbumEntry) {
-              AlbumEntry e = (AlbumEntry)adapted;
-              //log.debug("found album named: "+e.getName());
-              if(e.getName().equals(albumInfo.getFolderName())) {
-                  albumEntry = e;
-                  break;
+        /*
+        @todo #1: Create a domain object AlbumRunStatus.
+        AlbumRunStatus would collect all information about an album run, which would then be written out in
+        UploaderService#reportResults() after the program completes execution.
+
+        AlbumRunStatus runStatus = this.configuration.getAlbumRunStatus(albumInfo.getFolder());
+        String albumId = runStatus.getAlbumId();
+        if(!isEmpty(albumId)) {
+        */
+            for (GphotoEntry entry : entries) {
+              GphotoEntry adapted = entry.getAdaptedEntry();
+              if (adapted instanceof AlbumEntry) {
+                  AlbumEntry e = (AlbumEntry)adapted;
+                  log.debug("found album named: "+e.getName()+", comparing against "+albumInfo.getAlbumName());
+                  if(e.getName() != null && e.getName().equals(albumInfo.getAlbumName())) {
+//@todo #1                 if(e.getId() != null && e.getId().equals(albumId)) {
+                      albumEntry = e;
+                      break;
+                  }
               }
-          }
-        }
+            }
         return albumEntry;
     }
 
@@ -123,6 +130,11 @@ class PicasaAlbumFactory extends AlbumFactory {
                 albumEntry.setKeywords(mediaKeywords);
 
                 albumEntry = service.update( new URL(albumEntry.getEditLink().getHref()), albumEntry);
+/*
+@todo #1: When an album is added, store its ID in AlbumRunStatus
+                AlbumRunStatus runStatus = this.configuration.getAlbumRunStatus(albumInfo.getFolder());
+                runStatus.setId(albumEntry.getId());
+*/
             }
             
         } catch (Throwable e) {

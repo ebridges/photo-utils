@@ -9,6 +9,8 @@ import tinfoil.Album;
  * Date: 7/30/11
  * Time: 4:23 PM
  */
+//@todo #1 Rename "PhotoUploadResult" to "PhotoRunStatus" to be consistent with AlbumRunStatus.
+//@todo #1 change PhotoRunStatus#setSuccess() and PhotoRunStatus#setPartiallyProcessed to accept an ID
 public class PhotoUploadResult {
     private final Album album;
     private final File photo;

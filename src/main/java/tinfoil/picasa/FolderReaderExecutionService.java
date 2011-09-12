@@ -127,6 +127,7 @@ public class FolderReaderExecutionService {
                 for(final String folder : folders) {
                     final File subFolder = new File(rootDirectory, folder);
                     if(subFolder.exists() && subFolder.canRead()) {
+//@todo #1                        this.configuration.addAlbumRunStatus(subFolder);
                         callables.add(
                             new FolderReaderThread(subFolder, this.configuration)
                         );
@@ -144,6 +145,7 @@ public class FolderReaderExecutionService {
                 Collection<FolderReaderThread> callables = new ArrayList<FolderReaderThread>(subFolders.length);
                 for(File subFolder : subFolders) {
                     if(subFolder.exists() && subFolder.canRead()) {
+//@todo #1                        this.configuration.addAlbumRunStatus(subFolder);
                         callables.add(
                             new FolderReaderThread(subFolder, this.configuration)
                         );
@@ -161,6 +163,7 @@ public class FolderReaderExecutionService {
             for(final String folder : folders) {
                 final File subFolder = new File(folder);
                 if(subFolder.exists() && subFolder.canRead()) {
+//@todo #1                    this.configuration.addAlbumRunStatus(subFolder);
                     callables.add(
                         new FolderReaderThread(subFolder, this.configuration)
                     );
@@ -191,7 +194,7 @@ public class FolderReaderExecutionService {
     }
 }
 
-class SerialExecutor<T> extends AbstractExecutorService {
+class SerialExecutor extends AbstractExecutorService {
      final Queue<Runnable> tasks = new ArrayDeque<Runnable>();
      final ExecutorService executor;
      private Runnable active;

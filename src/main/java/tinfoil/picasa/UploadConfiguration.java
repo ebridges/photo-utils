@@ -1,11 +1,14 @@
 package tinfoil.picasa;
 
 import static tinfoil.Util.asList;
+import static tinfoil.Util.throwIfEmpty;
+import static tinfoil.picasa.Argument.rootDir;
 
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -43,8 +46,43 @@ public class UploadConfiguration {
 
     private URL serviceUrl;
 
+    public UploadConfiguration(Credentials credentials, Map<Argument, String> parameters) {
+        this.credentials = credentials;
+
+/*
+@todo #1 Add support for reading from a run-status file
+If a run-status file is specified on the command line then read in the previous run's files from there to
+be re-uploaded.  Support command line arguments:
+   a. rerun all from file (deleting and overwriting previous run)
+   b. rerun only the errors from file
+Given the filename, this class should populate the rootDirectory and folderList members appropriately based on above.
+The overwriteAlbum member should be deprecated.
+*/
+
+        this.rootDirectory = parameters.get(rootDir);
+        throwIfEmpty(this.rootDirectory, rootDir.argName());
+
+        this.folderList = parameters.containsKey(Argument.folderList) ?
+                new TreeSet<String>( asList(parameters.get(Argument.folderList)) ) :
+                new TreeSet<String>() ;
+        this.overwriteAlbum = parameters.containsKey(Argument.overwriteAlbum);
+
+        this.folderThreadPoolSize = parameters.containsKey(Argument.folderThreadPoolSize) ?
+                Integer.valueOf(parameters.get(Argument.folderThreadPoolSize)) :
+                DEFAULT_FOLDER_THREAD_POOL_SIZE;
+        this.fileThreadPoolSize = parameters.containsKey(Argument.fileThreadPoolSize) ?
+                Integer.valueOf(parameters.get(Argument.fileThreadPoolSize)) :
+                DEFAULT_FILE_THREAD_POOL_SIZE;
+        try {
+            this.serviceUrl = new URL(this.credentials.serviceUrl());
+        } catch (MalformedURLException e) {
+            throw new IllegalArgumentException(e);
+        }
+
+    }
+
     public UploadConfiguration(CommandLine cmd) {
-        this.rootDirectory = cmd.getOptionValue(Argument.rootDir.argName());
+        this.rootDirectory = cmd.getOptionValue(rootDir.argName());
         
         this.folderThreadPoolSize = cmd.hasOption(Argument.folderThreadPoolSize.argName()) ?
                 Integer.valueOf(cmd.getOptionValue(Argument.folderThreadPoolSize.argName())) :

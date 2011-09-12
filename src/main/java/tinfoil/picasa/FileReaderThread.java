@@ -58,6 +58,7 @@ public class FileReaderThread implements Callable<String> {
     public String call() throws Exception {
         logger.info(format("adding photo [%s] to folder [%s]", photo.getName(), album.getAlbumInfo().getAlbumName()));
         try {
+            //@todo #1 pass photoEntry.getId to PhotoRunStatus
             PhotoEntry photoEntry = initalizePhotoEntry();
             if(null != photoEntry) {
                 addTagsToPhoto(photoEntry);
