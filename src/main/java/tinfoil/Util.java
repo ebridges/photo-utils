@@ -244,6 +244,19 @@ public class Util {
         return dateType;
     }
 
+    public static String toString(Object[] vals) {
+        StringBuilder value = new StringBuilder(vals.length*32);
+        for(int i=0; i<vals.length; i++) {
+            if(i > 0) {
+                value.append(',');
+            }
+            if(null != vals[i]) {
+                value.append(vals.toString());
+            }
+        }
+        return value.toString();
+    }
+
     /**
      * Utility function to dump the entry as XML to the provided stream.
      *
@@ -274,6 +287,12 @@ public class Util {
         XmlWriter xmlW = new XmlWriter(w);
         feed.generateAtom(xmlW, new ExtensionProfile());
         w.flush();
+    }
+
+    public static void throwIfEmpty(String value, String field) {
+        if(isEmpty(value)) {
+            throw new IllegalArgumentException(String.format("%s cannot be empty",field));
+        }
     }
 
     public static boolean isEmpty(String v) {
