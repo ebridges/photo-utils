@@ -1,10 +1,12 @@
 package tinfoil.sorter;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import tinfoil.Util;
+import static java.lang.String.format;
+import static org.apache.commons.io.FileUtils.copyFileToDirectory;
+import static org.apache.commons.io.FileUtils.forceMkdir;
+import static tinfoil.Util.PictureDirectoryWalker;
+import static tinfoil.Util.changeFileExtension;
+import static tinfoil.Util.formatDate;
+import static tinfoil.Util.isVideo;
 
 import java.io.File;
 import java.io.IOException;
@@ -15,12 +17,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import static java.lang.String.format;
-import static org.apache.commons.io.FileUtils.copyFileToDirectory;
-import static org.apache.commons.io.FileUtils.forceMkdir;
-import static tinfoil.Util.changeFileExtension;
-import static tinfoil.Util.formatDate;
-import static tinfoil.Util.isVideo;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import tinfoil.Util;
 
 /**
  * Date: 6/22/11
@@ -71,8 +72,8 @@ public class PictureSorter {
         String pictureName = null;
         File destPath = null;
 
-        Util.PictureDirectoryWalker srcWalker = new Util.PictureDirectoryWalker(Util.MULTIMEDIA_FILE_FILTER);
-        Util.PictureDirectoryWalker destWalker = new Util.PictureDirectoryWalker(Util.MULTIMEDIA_FILE_FILTER);
+        PictureDirectoryWalker srcWalker = new PictureDirectoryWalker(Util.MULTIMEDIA_FILE_FILTER);
+        PictureDirectoryWalker destWalker = new PictureDirectoryWalker(Util.MULTIMEDIA_FILE_FILTER);
         try {
             srcWalker.walk(this.source);
             List<File> pictures = srcWalker.listPictures();
