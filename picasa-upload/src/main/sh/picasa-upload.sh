@@ -27,4 +27,4 @@ java -cp ${CP} \
     -Xmx2048m \
     -Dlog4j.debug=false \
     -Dlog4j.configuration=log4j.xml \
-    tinfoil.Uploader
+    Uploader
