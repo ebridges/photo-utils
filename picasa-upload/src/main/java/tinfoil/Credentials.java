@@ -11,11 +11,11 @@ import static tinfoil.CredentialInfo.*;
 class CredentialInfo {
     static final String TEST_USERID = "115366439539918876494";
     static final String TEST_SERVICE_URL = String.format("%s/%s",PICASA_DATA_API_URL,TEST_USERID);
-    static final String TEST_USERNAME = "picasatest@eqbridges.com";
-    static final String TEST_PASSWORD = "p1c@s@t3st";
+    static final String TEST_USERNAME = "";
+    static final String TEST_PASSWORD = "";
     static final String TEST_AUTHOR_NAME = "SimonFoo HaskellBar";
     static final String TEST_AUTHOR_HOME = String.format("%s/%s",PICASA_PROFILE_URL, TEST_USERID);
-    static final String TEST_AUTHOR_MAIL = "picasatest@eqbridges.com";
+    static final String TEST_AUTHOR_MAIL = "";
 
     static final String USERID = "";
     static final String SERVICE_URL = String.format("%s/%s",PICASA_DATA_API_URL,USERID);
